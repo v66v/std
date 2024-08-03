@@ -105,7 +105,10 @@ log_init (log_level level, char *fstdout, char *fstderr, char *mode)
   logger.level = level;
   logger.state = 1;
   if (mode != NULL)
-    strncpy (logger.mode, mode, 3);
+    {
+      strncpy (logger.mode, mode, 3);
+      logger.mode[2] = '\0';
+    }
 
   logger.buf_size = LOGBUFSIZE;
 
