@@ -8,29 +8,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int
-file_slurp (char *filepath, char **file_str)
+inline int
+fopenp (FILE **fp, char *filepath, char *mode)
 {
-  FILE *fp = fopen (filepath, "r");
-  ssize_t size;
-  int read;
-
-  if (fp == NULL)
+  *fp = fopen (filepath, mode);
+  if (*fp == NULL)
     {
       ERRNO ("Error opening file %s", filepath)
       return 1;
     }
+  return 0;
+}
 
-  if ((size = fseek (fp, 0L, SEEK_END)) == -1)
+inline int
+fclosep (FILE *fp, char *filepath)
+{
+  if (fclose (fp) != 0)
+    {
+      ERRNO ("Error closing file %s", filepath)
+      return 1;
+    }
+  return 0;
+}
+
+inline int
+fseekp (FILE *fp, char *filepath, long off, int whence)
+{
+  if ((fseek (fp, off, whence)) == -1)
     {
       ERRNO ("Error seeking file %s", filepath)
+      return 1;
+    }
+  return 0;
+}
+
+inline int
+ftellp (FILE *fp, ssize_t *size, char *filepath)
+{
+  if ((*size = ftell (fp)) == -1)
+    {
+      ERRNO ("Error telling file %s", filepath)
+      return 1;
+    }
+  return 0;
+}
+
+int
+file_slurp (char *filepath, char **file_str)
+{
+  FILE *fp;
+  ssize_t size;
+  int read;
+
+  if (fopenp (&fp, filepath, "r"))
+    return 1;
+
+  if (fseekp (fp, filepath, 0L, SEEK_END))
+    {
       FCLOSE (fp, filepath)
       return 1;
     }
 
-  if ((size = ftell (fp)) == -1)
+  if (ftellp (fp, &size, filepath))
     {
-      ERRNO ("Error telling file %s", filepath)
       FCLOSE (fp, filepath)
       return 1;
     }
@@ -68,12 +108,7 @@ file_slurp (char *filepath, char **file_str)
 
   (*file_str)[read] = '\0';
 
-  if (fclose (fp) != 0)
-    {
-      ERRNO ("Error closing file %s", filepath)
-      return 1;
-    }
-  return 0;
+  return fclosep (fp, filepath);
 }
 
 inline int
