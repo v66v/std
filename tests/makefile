@@ -57,7 +57,7 @@ CC = gcc
 LIBTOOL := libtool
 LIBTOOLFLAGS := --silent
 
-TEST_FILES:= std-str
+TEST_FILES := std-str std-lib
 BIN_NAME := main
 
 .DEFAULT_GOAL := check
