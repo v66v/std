@@ -61,8 +61,10 @@ TEST_FILES:= std-str
 BIN_NAME := main
 
 .DEFAULT_GOAL := check
-check: build
-	$(foreach test,$(TEST_FILES), @./$(BUILDDIR)/bin/$(test))
+check: build $(TEST_FILES)
+
+$(TEST_FILES):
+	./$(BUILDDIR)/bin/$@
 
 build: build_info $(TEST_LIB) dirs makefile $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
 
