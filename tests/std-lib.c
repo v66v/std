@@ -6,25 +6,8 @@
 // should be last
 #include <cmocka.h>
 
+#include "global.h"
 #include "std/std-lib.h"
-#include <unistd.h>
-
-int
-disable_stderr ()
-{
-  fflush (stderr);
-  int fd = dup (STDERR_FILENO);
-  freopen ("/dev/null", "w", stderr);
-  return fd;
-}
-
-void
-enable_stderr (int fd)
-{
-  fflush (stderr);
-  dup2 (fd, fileno (stderr));
-  close (fd);
-}
 
 static void
 mallocp_test ()
@@ -76,7 +59,6 @@ reallocpe_test ()
   enable_stderr (fd);
 }
 
-static const char file_name[] = __FILE__;
 int
 main (void)
 {
@@ -86,7 +68,6 @@ main (void)
     cmocka_unit_test (reallocpe_test),
   };
 
-  printf ("\n\e[1mRunning test suite: %.*s\e[m\n",
-          (int)strcspn (file_name, "."), file_name);
+  TEST_START
   return cmocka_run_group_tests (tests, NULL, NULL);
 }

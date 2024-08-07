@@ -6,8 +6,9 @@
 
 // should be last
 #include <cmocka.h>
+
+#include "global.h"
 #include <stdio.h>
-#include <string.h>
 
 static void
 touppers_test ()
@@ -35,7 +36,6 @@ str_copym_test ()
   assert_string_equal (new_str, str);
 }
 
-static const char file_name[] = __FILE__;
 int
 main (void)
 {
@@ -45,7 +45,6 @@ main (void)
     cmocka_unit_test (str_copym_test),
   };
 
-  printf ("\n\e[1mRunning test suite: %.*s\e[m\n",
-          (int)strcspn (file_name, "."), file_name);
+  TEST_START
   return cmocka_run_group_tests (tests, NULL, NULL);
 }
