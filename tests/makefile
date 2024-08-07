@@ -18,7 +18,7 @@ BUILDDIRBASE := build/
 BUILDDIR := $(BUILDDIRBASE)$(TYPE)
 DESTDIR ?= $(dir $(CURDIR))$(BUILDDIR)
 
-INC_DIRS = $(SRC_DIR)/ ../
+INC_DIRS = $(SRC_DIR)/ $(DESTDIR)/include/
 INCS := $(addprefix -I,$(INC_DIRS))
 SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
 

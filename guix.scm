@@ -25,7 +25,6 @@
   (list #:phases
         #~(modify-phases %standard-phases
                          (delete 'configure)
-                         (delete 'check)
                          (delete 'build)
                          (replace 'install
                                   (lambda* (#:key outputs #:allow-other-keys)

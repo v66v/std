@@ -23,6 +23,10 @@ INC_DIRS = $(SRC_DIR)/
 INCS := $(addprefix -I,$(INC_DIRS))
 SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
 
+HDR_FILES := $(shell find $(SRC_DIR)/ -name "*.h")
+HDR_DIR := $(BUILDDIR)/include/std
+HDRS := $(HDR_FILES:$(SRC_DIR)/%=$(HDR_DIR)/%)
+
 OBJS_DIR = $(BUILDDIR)/objects
 OBJS := $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
 DEPS := $(OBJS:.lo=.d)
@@ -60,12 +64,15 @@ LIB_NAME := std
 
 .DEFAULT_GOAL := all
 all: build
-build: build_info dirs makefile $(BUILDDIR)/lib/lib$(LIB_NAME).la
+build: build_info dirs makefile $(BUILDDIR)/lib/lib$(LIB_NAME).la $(HDRS)
 
 check:
 	@$(MAKE) -sC tests
 
-$(BUILDDIR)/lib/lib$(LIB_NAME).la: $(OBJS) $(DESTDIR)/lib/
+$(HDRS):
+	@cp $(SRC_DIR)/$(@F) $@
+
+$(BUILDDIR)/lib/lib$(LIB_NAME).la: $(OBJS)
 	$(info [CC] Linking object files)
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) $(LIBTOOL_TYPE) \
 		$(LIBTOOL_CFLAGS) $(LIBS) -o $(OBJS_DIR)/lib$(LIB_NAME).la -rpath $(DESTDIR)/lib $^
@@ -79,11 +86,12 @@ $(OBJS_DIR)/%.lo: $(SRC_DIR)/%.c makefile
 install: install_info build
 ifneq ($(BUILDDIR), $(DESTDIR))
 	@cp -r $(BUILDDIR)/lib/ $(DESTDIR)/
+	@cp -r $(BUILDDIR)/include/ $(DESTDIR)/
 else
 	$(info [WRN] BUILDDIR($(BUILDDIR)) == DESTDIR($(DESTDIR)))
 endif
 
-dirs: $(BUILDDIR)/lib/ $(dir $(OBJS))
+dirs: $(BUILDDIR)/lib/ $(DESTDIR)/lib/ $(HDR_DIR)/ $(dir $(OBJS))
 
 .PRECIOUS: $(BUILDDIR)/. $(BUILDDIR)/%/.
 $(BUILDDIR)/:
