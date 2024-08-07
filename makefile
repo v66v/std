@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SRC_DIR ?= std
+SRC_DIR ?= src
 TYPE ?= release
 BUILDDIRBASE := build/
 BUILDDIR := $(BUILDDIRBASE)$(TYPE)
@@ -47,11 +47,13 @@ LIB_NAMES :=
 LIBS := $(addprefix -l,$(LIB_NAMES))
 LIBS += $(PKGCONFIG_LIBS)
 
-CFLAGS = -MMD -MP -O2 -std=gnu11
+CFLAGS = -MMD -MP -std=gnu11
 CFLAGS += $(PKGCONFIG_CFLAGS)
 
 ifeq ($(TYPE), debug)
-	CFLAGS += -DDEBUG -ggdb -Wall -Wextra -Wswitch-enum -Wswitch-default
+	CFLAGS += -O2 -DDEBUG -ggdb -Wall -Wextra -Wswitch-enum -Wswitch-default
+else
+	CFLAGS += -O3
 endif
 
 CC := gcc

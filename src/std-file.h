@@ -22,8 +22,12 @@ extern "C"
 
   int fopenp (FILE **fp, char *filepath, char *mode);
   int fclosep (FILE *fp, char *filepath);
+  // TODO:
+  // https://stackoverflow.com/questions/1188757/retrieve-filename-from-file-descriptor-in-c
   int fseekp (FILE *fp, char *filepath, long off, int whence);
   int ftellp (FILE *fp, ssize_t *size, char *filepath);
+  // TODO:
+  // https://stackoverflow.com/questions/1188757/retrieve-filename-from-file-descriptor-in-c
   int file_slurp (char *filepath, char **file_str);
   int file_tryopen (FILE **fp, char *filepath, char *mode, FILE *fallback);
 

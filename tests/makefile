@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SRC_DIR ?= .
+SRC_DIR ?= src
 TYPE ?= release
 BUILDDIRBASE := build/
 BUILDDIR := $(BUILDDIRBASE)$(TYPE)
@@ -71,7 +71,7 @@ check: build
 build: build_info dirs makefile $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
 
 $(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o $(TEST_LIB)
-	$(info [CC] Linking object files)
+	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
 		$^ $(TEST_LIB) $(LIBS)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/$*
