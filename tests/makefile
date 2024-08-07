@@ -61,25 +61,22 @@ TEST_FILES := std-str std-lib std-file
 BIN_NAME := main
 
 .DEFAULT_GOAL := check
-check: build $(TEST_FILES)
+check: build
+	$(foreach file, $(TEST_FILES), ./$(BUILDDIR)/bin/$(file);)
 
-$(TEST_FILES):
-	./$(BUILDDIR)/bin/$@
-
-build: build_info $(TEST_LIB) dirs makefile $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
-
-.NOTPARALLEL:
 %.la:
 	$(info [INFO] Bootstraping library [$(*:$(dir $(CURDIR))%=%)])
 	@$(MAKE) -C ..
 
-$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o
+build: build_info dirs makefile $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
+
+$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o $(TEST_LIB)
 	$(info [CC] Linking object files)
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
 		$^ $(TEST_LIB) $(LIBS)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/$*
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c makefile
+$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c $(TEST_LIB) makefile
 	$(info [CC] $<)
 	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
