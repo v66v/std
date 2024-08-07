@@ -3,6 +3,18 @@
 #include "std-lib.h"
 
 inline int
+callocp (void **ptr, size_t nmemb, size_t size)
+{
+  *ptr = (void *)calloc (nmemb, size);
+  if (*ptr == NULL)
+    {
+      ERRNO ("Error allocating %ld byte(s) of memory", size)
+      return 1;
+    }
+  return 0;
+}
+
+inline int
 mallocp (void **ptr, size_t size)
 {
   *ptr = (void *)malloc (size);

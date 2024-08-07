@@ -10,10 +10,23 @@
 #include "std/std-lib.h"
 
 static void
+callocp_test ()
+{
+  int *ptr, size = 100;
+  int arr[100] = { 0 };
+  int res = callocp ((void **)&ptr, sizeof (int), size);
+
+  assert_int_equal (res, 0);
+  assert_non_null (ptr);
+  assert_memory_equal (ptr, arr, sizeof (int) * size);
+  free (ptr);
+}
+
+static void
 mallocp_test ()
 {
   int *ptr, size = 100;
-  int res = mallocp ((void **)&ptr, size);
+  int res = mallocp ((void **)&ptr, sizeof (int) * size);
   assert_int_equal (res, 0);
   assert_non_null (ptr);
   free (ptr);
@@ -63,6 +76,7 @@ int
 main (void)
 {
   const struct CMUnitTest tests[] = {
+    cmocka_unit_test (callocp_test),
     cmocka_unit_test (mallocp_test),
     cmocka_unit_test (reallocp_test),
     cmocka_unit_test (reallocpe_test),

@@ -9,6 +9,7 @@ extern "C"
 {
 #endif
 
+  int callocp (void **ptr, size_t nmemb, size_t size);
   int mallocp (void **ptr, size_t size);
   int reallocp (void **ptr, size_t size);
   int reallocpe (void **ptr, size_t size);
