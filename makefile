@@ -65,7 +65,7 @@ build: build_info dirs makefile $(BUILDDIR)/lib/lib$(LIB_NAME).la
 check:
 	@$(MAKE) -sC tests
 
-$(BUILDDIR)/lib/lib$(LIB_NAME).la: $(OBJS)
+$(BUILDDIR)/lib/lib$(LIB_NAME).la: $(OBJS) $(DESTDIR)/lib/
 	$(info [CC] Linking object files)
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) $(LIBTOOL_TYPE) \
 		$(LIBTOOL_CFLAGS) $(LIBS) -o $(OBJS_DIR)/lib$(LIB_NAME).la -rpath $(DESTDIR)/lib $^
@@ -77,7 +77,6 @@ $(OBJS_DIR)/%.lo: $(SRC_DIR)/%.c makefile
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=compile $(CC) $(CFLAGS) $(INCS) -o $@ -c $<
 
 install: install_info build
-	@mkdir -p $(DESTDIR)/lib/
 ifneq ($(BUILDDIR), $(DESTDIR))
 	@cp -r $(BUILDDIR)/lib/ $(DESTDIR)/
 else
@@ -88,6 +87,10 @@ dirs: $(BUILDDIR)/lib/ $(dir $(OBJS))
 
 .PRECIOUS: $(BUILDDIR)/. $(BUILDDIR)/%/.
 $(BUILDDIR)/:
+	$(info [INFO] Creating directory [$@])
+	@mkdir -p $@
+
+$(DESTDIR)/%/:
 	$(info [INFO] Creating directory [$@])
 	@mkdir -p $@
 
