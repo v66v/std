@@ -3,6 +3,11 @@
 #pragma once
 #include <stdio.h>
 
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
+
 #ifdef DEBUG
 #define DEBUG_T(file, type, fmt, ...)                                         \
   do                                                                          \
@@ -22,4 +27,8 @@
 #define DEBUG_LOG(fmt, ...)
 #define DEBUG_ERROR(fmt, ...)
 #define DEBUG_WARN(fmt, ...)
+#endif
+
+#if defined(__cplusplus)
+}
 #endif

@@ -4,6 +4,15 @@
 #include "std-err.h"
 #include <stdlib.h>
 
-int mallocp (void **ptr, size_t size);
-int reallocp (void **ptr, size_t size);
-int reallocpe (void **ptr, size_t size);
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
+
+  int mallocp (void **ptr, size_t size);
+  int reallocp (void **ptr, size_t size);
+  int reallocpe (void **ptr, size_t size);
+
+#if defined(__cplusplus)
+}
+#endif

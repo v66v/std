@@ -3,6 +3,11 @@
 #pragma once
 #include <stdio.h>
 
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
+
 #define UNUSED(x) (void)(x)
 
 #define STR_IMPL_(...) #__VA_ARGS__
@@ -24,3 +29,7 @@
     __typeof__ (b) _b = (b);                                                  \
     _a < _b ? _a : _b;                                                        \
   })
+
+#if defined(__cplusplus)
+}
+#endif

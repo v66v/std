@@ -2,6 +2,15 @@
 
 #pragma once
 
-void tolowers (char *s);
-void touppers (char *s);
-int str_copym (char **dest, char *orig);
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
+
+  void tolowers (char *s);
+  void touppers (char *s);
+  int str_copym (char **dest, char *orig);
+
+#if defined(__cplusplus)
+}
+#endif

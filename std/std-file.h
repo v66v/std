@@ -3,6 +3,11 @@
 #pragma once
 #include <stdio.h>
 
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
+
 #define FCLOSE(fp, filepath)                                                  \
   if (fclose (fp) != 0)                                                       \
     {                                                                         \
@@ -15,9 +20,13 @@
  */
 #define SLURP_FILE_REALLOC 0
 
-int fopenp (FILE **fp, char *filepath, char *mode);
-int fclosep (FILE *fp, char *filepath);
-int fseekp (FILE *fp, char *filepath, long off, int whence);
-int ftellp (FILE *fp, ssize_t *size, char *filepath);
-int file_slurp (char *filepath, char **file_str);
-int file_tryopen (FILE **fp, char *filepath, char *mode, FILE *fallback);
+  int fopenp (FILE **fp, char *filepath, char *mode);
+  int fclosep (FILE *fp, char *filepath);
+  int fseekp (FILE *fp, char *filepath, long off, int whence);
+  int ftellp (FILE *fp, ssize_t *size, char *filepath);
+  int file_slurp (char *filepath, char **file_str);
+  int file_tryopen (FILE **fp, char *filepath, char *mode, FILE *fallback);
+
+#if defined(__cplusplus)
+}
+#endif
