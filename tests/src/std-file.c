@@ -1,4 +1,3 @@
-#include "std/std-str.h"
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -9,6 +8,7 @@
 
 #include "global.h"
 #include "std/std-file.h"
+#include "std/std-str.h"
 #include <stdio.h>
 #include <string.h>
 

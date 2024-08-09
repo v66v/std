@@ -18,7 +18,7 @@ BUILDDIRBASE := build/
 BUILDDIR := $(BUILDDIRBASE)$(TYPE)
 DESTDIR ?= $(dir $(CURDIR))$(BUILDDIR)
 
-INC_DIRS = $(SRC_DIR)/ $(DESTDIR)/include/
+INC_DIRS = $(CURDIR)/$(SRC_DIR)/ $(DESTDIR)/include/
 INCS := $(addprefix -I,$(INC_DIRS))
 SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
 
@@ -29,35 +29,44 @@ OBJS := $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 -include $(DEPS)
 
-PKGCONFIGS_CFLAGS :=
-PKGCONFIGS_LIBS :=
-
-ifneq ($(PKGCONFIGS_CFLAGS),)
-	PKGCONFIG_CFLAGS = $(shell pkg-config --cflags $(PKGCONFIGS_CFLAGS))
-endif
-
-ifneq ($(PKGCONFIGS_LIBS),)
-	PKGCONFIG_LIBS = $(shell pkg-config --libs $(PKGCONFIGS_LIBS))
-endif
-
 LIB_NAMES := cmocka
 LIBS := $(addprefix -l,$(LIB_NAMES))
-LIBS += $(PKGCONFIG_LIBS)
 
 CFLAGS = -MMD -MP -flto -O2 -std=gnu11 -fsanitize=address
-CFLAGS += $(PKGCONFIG_CFLAGS)
 
 TEST_LIB := $(DESTDIR)/lib/libstd.la
+TEST_LIB_FONTCONFIG := $(DESTDIR)/lib/extra/libstd-fontconfig.la
 
 ifeq ($(TYPE), debug)
 	CFLAGS += -DDEBUG -ggdb -Wall -Wextra -Wswitch-enum -Wswitch-default
 endif
 
+PKGCONFIGS_CFLAGS :=
+PKGCONFIGS_LIBS :=
+
+TEST_FILES := std-str std-lib std-file
+
+LOCAL := F
+ifeq ($(LOCAL),T)
+	TEST_FILES += extra/fontconfig/std-fontconfig
+endif
+
+ifneq ($(PKGCONFIGS_CFLAGS),)
+	PKGCONFIG_CFLAGS = $(shell pkg-config --cflags $(PKGCONFIGS_CFLAGS))
+endif
+CFLAGS += $(PKGCONFIG_CFLAGS)
+
+ifneq ($(PKGCONFIGS_LIBS),)
+	PKGCONFIG_LIBS = $(shell pkg-config --libs $(PKGCONFIGS_LIBS))
+endif
+LIBS += $(PKGCONFIG_LIBS)
+
 CC = gcc
 LIBTOOL := libtool
 LIBTOOLFLAGS := --silent
 
-TEST_FILES := std-str std-lib std-file
+
+BIN_TEST_FILES := $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
 BIN_NAME := main
 
 .DEFAULT_GOAL := check
@@ -68,7 +77,7 @@ check: build
 	$(info [INFO] Bootstraping library [$(*:$(dir $(CURDIR))%=%)])
 	@$(MAKE) -C ..
 
-build: build_info dirs makefile $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
+build: build_info dirs makefile $(BIN_TEST_FILES)
 
 $(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o $(TEST_LIB)
 	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
@@ -76,11 +85,17 @@ $(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o $(TEST_LIB)
 		$^ $(TEST_LIB) $(LIBS)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/$*
 
+$(BUILDDIR)/bin/extra/fontconfig/%: $(OBJS_DIR)/extra/fontconfig/%.o $(TEST_LIB)
+	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
+	$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
+		$^ $(TEST_LIB) $(TEST_LIB_FONTCONFIG) $(LIBS) $(shell pkg-config --libs fontconfig)
+	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/extra/fontconfig/$*
+
 $(OBJS_DIR)/%.o: $(SRC_DIR)/%.c $(TEST_LIB) makefile
 	$(info [CC] $<)
 	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
-dirs: $(BUILDDIR)/bin/ $(dir $(OBJS))
+dirs: $(BUILDDIR)/bin/ $(dir $(OBJS)) $(dir $(BIN_TEST_FILES))
 
 .PRECIOUS: $(BUILDDIR)/. $(BUILDDIR)/%/.
 $(BUILDDIR)/:

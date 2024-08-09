@@ -21,16 +21,24 @@ export DESTDIR
 
 INC_DIRS = $(SRC_DIR)/
 INCS := $(addprefix -I,$(INC_DIRS))
-SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
+NOTPATH := -not -path "$(SRC_DIR)/extra/*"
+SRC_FILES := $(shell find $(SRC_DIR)/ $(NOTPATH) -name "*.c")
 
 HDR_FILES := $(shell find $(SRC_DIR)/ -name "*.h")
 HDR_DIR := $(BUILDDIR)/include/std
 HDRS := $(HDR_FILES:$(SRC_DIR)/%=$(HDR_DIR)/%)
 
+FONTCONFIG_SRC_FILES := $(shell find $(SRC_DIR)/extra/fontconfig -name "*.c")
+
 OBJS_DIR = $(BUILDDIR)/objects
 OBJS := $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
-DEPS := $(OBJS:.lo=.d)
+
+FONTCONFIG_OBJS := $(FONTCONFIG_SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
+
+DEPS := $(OBJS:.lo=.d) $(FONTCONFIG_OBJS:.lo=.d)
 -include $(DEPS)
+
+FONTCONFIG_CFLAGS := $(shell pkg-config --cflags fontconfig)
 
 PKGCONFIGS_CFLAGS :=
 PKGCONFIGS_LIBS :=
@@ -63,29 +71,40 @@ LIBTOOL_TYPE := # -static or -shared
 LIBTOOL_CFLAGS := -version-info 1:1:0
 
 LIB_NAME := std
+TARGET_LIBS := libstd extra/libstd-fontconfig
+LIBNS := $(TARGET_LIBS:%=$(BUILDDIR)/lib/%.la)
 
 .DEFAULT_GOAL := all
 all: build
-build: build_info dirs makefile $(BUILDDIR)/lib/lib$(LIB_NAME).la $(HDRS)
+build: build_info dirs hdrs $(LIBNS) makefile
 
 check:
 	@$(MAKE) -sC tests
 
-$(HDRS):
-	@cp $(SRC_DIR)/$(@F) $@
+hdrs: header_info $(HDRS)
+$(HDR_DIR)/%.h:
+	@cp $(SRC_DIR)/$*.h $(HDR_DIR)/$*.h
 
-$(BUILDDIR)/lib/lib$(LIB_NAME).la: $(OBJS)
-	$(info [CC] Linking object files)
+$(BUILDDIR)/lib/libstd.la: $(OBJS)
+	$(info [CC] Linking object files [libstd])
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) $(LIBTOOL_TYPE) \
-		$(LIBTOOL_CFLAGS) $(LIBS) -o $(OBJS_DIR)/lib$(LIB_NAME).la -rpath $(DESTDIR)/lib $^
+		$(LIBTOOL_CFLAGS) $(LIBS) -o $(OBJS_DIR)/libstd.la -rpath $(DESTDIR)/lib $^
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install install -c \
-		$(OBJS_DIR)/lib$(LIB_NAME).la $(DESTDIR)/lib/lib$(LIB_NAME).la
+		$(OBJS_DIR)/libstd.la $(DESTDIR)/lib/libstd.la
+
+$(BUILDDIR)/lib/extra/libstd-fontconfig.la: $(FONTCONFIG_OBJS)
+	$(info [CC] Linking object files [libstd-fontconfig])
+	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) $(LIBTOOL_TYPE) \
+		$(LIBTOOL_CFLAGS) $(FONTCONFIG_CFLAGS) \
+		-o $(OBJS_DIR)/libstd-fontconfig.la -rpath $(DESTDIR)/lib/extra $^
+	@$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install install -c \
+		$(OBJS_DIR)/libstd-fontconfig.la $(DESTDIR)/lib/extra/libstd-fontconfig.la
 
 $(OBJS_DIR)/%.lo: $(SRC_DIR)/%.c makefile
 	$(info [CC] $<)
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=compile $(CC) $(CFLAGS) $(INCS) -o $@ -c $<
 
-install: install_info build
+install: $(DESTDIR)/lib/extra/ install_info build
 ifneq ($(BUILDDIR), $(DESTDIR))
 	@cp -r $(BUILDDIR)/lib/ $(DESTDIR)/
 	@cp -r $(BUILDDIR)/include/ $(DESTDIR)/
@@ -93,10 +112,14 @@ else
 	$(info [WRN] BUILDDIR($(BUILDDIR)) == DESTDIR($(DESTDIR)))
 endif
 
-dirs: $(BUILDDIR)/lib/ $(DESTDIR)/lib/ $(HDR_DIR)/ $(dir $(OBJS))
+dirs: $(dir $(LIBNS)) $(dir $(OBJS)) $(dir $(HDRS))
 
-.PRECIOUS: $(BUILDDIR)/. $(BUILDDIR)/%/.
+.PRECIOUS: $(BUILDDIR)/. $(BUILDDIR)/%/. $(DESTDIR)/. $(DESTDIR)/%/.
 $(BUILDDIR)/:
+	$(info [INFO] Creating directory [$@])
+	@mkdir -p $@
+
+$(DESTDIR)/:
 	$(info [INFO] Creating directory [$@])
 	@mkdir -p $@
 
@@ -119,6 +142,9 @@ endif
 install_info:
 	$(info [INFO] Installing Library [$(DESTDIR)/lib/$(LIB_NAME)])
 
+header_info:
+	$(info [INFO] Copying header files [$(BUILDDIR)/include/])
+
 clean:
 	$(info [INFO] Cleaning [$(notdir $(CURDIR))])
 	@rm -rf $(BUILDDIRBASE)/
@@ -127,4 +153,5 @@ clean:
 ccls:
 	$(info [INFO] Creating .ccls file)
 	@printf "%s\\n" $(CC) $(subst ' ','\n',$(LIBS)) $(CFLAGS) \
-			$(subst ' ','\n',$(INCS)) -I$(subst :, -I,$(C_INCLUDE_PATH)) > .ccls
+			$(subst ' ','\n',$(INCS)) $(subst ' ','\n',$(FONTCONFIG_CFLAGS)) \
+			-I$(subst :, -I,$(C_INCLUDE_PATH)) > .ccls

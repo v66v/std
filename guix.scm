@@ -2,6 +2,8 @@
              (guix build-system gnu)
              (guix git-download)
              (gnu packages check)
+             (gnu packages fontutils)
+             (gnu packages pkg-config)
              (gnu packages commencement)
 
              ((guix licenses)
@@ -31,7 +33,13 @@
                                     (let ((out (assoc-ref outputs "out")))
                                       (invoke "make" "install"
                                               (string-append "DESTDIR=" out))))))))
- (native-inputs (append (list gcc-toolchain libtool cmocka)))
+ (native-inputs (append (list gcc-toolchain
+							  libtool
+							  cmocka
+
+							  ;; only for dev
+							  pkg-config
+							  fontconfig)))
  (synopsis "A simple c standard library extension library.")
  (description "A simple c standard library extension library.")
  (home-page "https://github.com/v66v/std")
