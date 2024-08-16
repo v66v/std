@@ -30,6 +30,12 @@ extern "C"
     _a < _b ? _a : _b;                                                        \
   })
 
+/* Bitwise flip the lsb */
+#define flip(a) a ^= 1
+
+/* Bitwise flip the nth bit */
+#define bflip(a, n) a ^= 1 << n
+
 #if defined(__cplusplus)
 }
 #endif

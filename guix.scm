@@ -34,12 +34,12 @@
                                       (invoke "make" "install"
                                               (string-append "DESTDIR=" out))))))))
  (native-inputs (append (list gcc-toolchain
-							  libtool
-							  cmocka
+                              libtool
+                              cmocka
 
-							  ;; only for dev
-							  pkg-config
-							  fontconfig)))
+                              ;; only for dev
+                              pkg-config
+                              fontconfig)))
  (synopsis "A simple c standard library extension library.")
  (description "A simple c standard library extension library.")
  (home-page "https://github.com/v66v/std")
