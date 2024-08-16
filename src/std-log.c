@@ -10,8 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define LOGDO(x) (logger.state && x <= logger.level)
+#define LOGF(x) x <= lwarn ? logger.fe : logger.fo
 #define LOGBUFSIZE 1000
 
 typedef struct
@@ -33,24 +35,17 @@ typedef struct
 logger_t logger = { 0 };
 
 void
-log_out (log_level lvl, const char *prefix, const char *suffix,
-         const char *fmt, ...)
+log_out (log_level lvl, const char *fmt, ...)
 {
   char *c = logger.buf;
   int res = 0;
+
   if (LOGDO (lvl))
     {
-      FILE *f = lvl <= lwarn ? logger.fe : logger.fo;
+      FILE *f = LOGF (lvl);
 
       strftime (c, 23, "[%Y-%m-%d %H:%M:%S] ", logger.tm_info);
       c += 22;
-
-      if (prefix != NULL)
-        {
-          res = snprintf (c, LOGBUFSIZE - (c - logger.buf), "%s", prefix);
-          c = MIN ((c - logger.buf) + (res > 0 ? res : 0), LOGBUFSIZE)
-              + logger.buf;
-        }
 
       va_list ap;
       va_start (ap, fmt);
@@ -59,13 +54,6 @@ log_out (log_level lvl, const char *prefix, const char *suffix,
       c = MIN ((c - logger.buf) + (res > 0 ? res : 0), LOGBUFSIZE)
           + logger.buf;
 
-      if (suffix != NULL)
-        {
-          res = snprintf (c, LOGBUFSIZE - (c - logger.buf), "%s", suffix);
-          c = MIN ((c - logger.buf) + (res > 0 ? res : 0), LOGBUFSIZE)
-              + logger.buf;
-        }
-
       if ((c - logger.buf) < LOGBUFSIZE)
         c += 2;
 
@@ -73,6 +61,7 @@ log_out (log_level lvl, const char *prefix, const char *suffix,
       c[0] = '\0';
 
       flockfile (f); /* thread safety */
+                     /* TODO: add batch write mode */
       fwrite (logger.buf, 1, c - logger.buf, f);
       funlockfile (f);
     }
@@ -85,7 +74,7 @@ log_set_fp (FILE **fp, char *filepath, FILE *fallback)
   if ((status = file_tryopen (fp, filepath, logger.mode, fallback)) == 1)
     {
       log_errno ("Error opening file %s", filepath);
-      log_warn ("Defaulting to stdout\n");
+      log_warn ("Defaulting to fallback\n");
     }
   else if (status == 0)
     {
@@ -154,5 +143,5 @@ log_enable ()
 inline void
 log_toggle ()
 {
-  logger.state = !logger.state;
+  flip (logger.state);
 }
