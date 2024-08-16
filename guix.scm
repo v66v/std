@@ -28,16 +28,14 @@
         #~(modify-phases %standard-phases
                          (delete 'configure)
                          (delete 'build)
+                         (delete 'check)
                          (replace 'install
                                   (lambda* (#:key outputs #:allow-other-keys)
                                     (let ((out (assoc-ref outputs "out")))
                                       (invoke "make" "install"
                                               (string-append "DESTDIR=" out))))))))
- (native-inputs (append (list gcc-toolchain
-                              libtool
+ (native-inputs (append (list libtool
                               cmocka
-
-                              ;; only for dev
                               pkg-config
                               fontconfig)))
  (synopsis "A simple c standard library extension library.")

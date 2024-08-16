@@ -24,16 +24,26 @@ INCS := $(addprefix -I,$(INC_DIRS))
 NOTPATH := -not -path "$(SRC_DIR)/extra/*"
 SRC_FILES := $(shell find $(SRC_DIR)/ $(NOTPATH) -name "*.c")
 
-HDR_FILES := $(shell find $(SRC_DIR)/ -name "*.h")
+ifdef EXTRAS
+export EXTRAS
+	HDR_FILES := $(shell find $(SRC_DIR)/ -name "*.h")
+else
+	HDR_FILES := $(shell find $(SRC_DIR)/ $(NOTPATH) -name "*.h")
+endif
+
 HDR_DIR := $(BUILDDIR)/include/std
 HDRS := $(HDR_FILES:$(SRC_DIR)/%=$(HDR_DIR)/%)
-
-FONTCONFIG_SRC_FILES := $(shell find $(SRC_DIR)/extra/fontconfig -name "*.c")
 
 OBJS_DIR = $(BUILDDIR)/objects
 OBJS := $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
 
-FONTCONFIG_OBJS := $(FONTCONFIG_SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
+ifdef EXTRAS
+	FONTCONFIG_SRC_FILES := $(shell find $(SRC_DIR)/extra/fontconfig -name "*.c")
+	FONTCONFIG_OBJS := $(FONTCONFIG_SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.lo)
+else
+	FONTCONFIG_SRC_FILES :=
+	FONTCONFIG_OBJS :=
+endif
 
 DEPS := $(OBJS:.lo=.d) $(FONTCONFIG_OBJS:.lo=.d)
 -include $(DEPS)
@@ -71,7 +81,11 @@ LIBTOOL_TYPE := # -static or -shared
 LIBTOOL_CFLAGS := -version-info 1:1:0
 
 LIB_NAME := std
-TARGET_LIBS := libstd extra/libstd-fontconfig
+TARGET_LIBS := libstd
+ifdef EXTRAS
+	TARGET_LIBS += extra/libstd-fontconfig
+endif
+
 LIBNS := $(TARGET_LIBS:%=$(BUILDDIR)/lib/%.la)
 
 .DEFAULT_GOAL := all
@@ -81,7 +95,7 @@ build: build_info dirs hdrs $(LIBNS) makefile
 check:
 	@$(MAKE) -sC tests
 
-hdrs: header_info $(HDRS)
+hdrs: $(HDRS)
 $(HDR_DIR)/%.h:
 	@cp $(SRC_DIR)/$*.h $(HDR_DIR)/$*.h
 
@@ -131,7 +145,8 @@ $(BUILDDIR)/%/:
 	$(info [INFO] Creating directory [$@])
 	@mkdir -p $@
 
-.PHONY: clean ccls debug_info build_info install_info
+.PHONY: clean ccls build_info install_info
+
 build_info:
 ifeq ($(TYPE), debug)
 	$(info [INFO] Compiling In Debug Mode [$(BUILDDIR)/lib/$(LIB_NAME)])
@@ -141,9 +156,6 @@ endif
 
 install_info:
 	$(info [INFO] Installing Library [$(DESTDIR)/lib/$(LIB_NAME)])
-
-header_info:
-	$(info [INFO] Copying header files [$(BUILDDIR)/include/])
 
 clean:
 	$(info [INFO] Cleaning [$(notdir $(CURDIR))])

@@ -1,4 +1,5 @@
 #+title: std
+#+startup: showall
 
 A simple WIP c standard library extension library.
 
@@ -19,5 +20,25 @@ Warning: Do NOT run `make build' before the above command. `make install'
 
 * Check
 #+begin_src bash
-  guix shell --pure -Df guix.scm -- make -j4 TYPE=debug check
+  guix shell --pure -Df guix.scm -- make -j4 check TYPE=debug
+#+end_src
+
+* Extras
+In order to compile the extra sub libraries, `EXTRAS' needs to be defined
+
+Currently the extras require: pkg-config and fontconfig
+
+** Building (Debug)
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 TYPE=debug EXTRAS=1
+#+end_src
+
+** Installing
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 install DESTDIR=/somewhere/on/system EXTRAS=1
+#+end_src
+
+** Check
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 check TYPE=debug EXTRAS=1
 #+end_src

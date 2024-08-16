@@ -20,7 +20,13 @@ DESTDIR ?= $(dir $(CURDIR))$(BUILDDIR)
 
 INC_DIRS = $(CURDIR)/$(SRC_DIR)/ $(DESTDIR)/include/
 INCS := $(addprefix -I,$(INC_DIRS))
-SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
+NOTPATH := -not -path "$(SRC_DIR)/extra/*"
+ifdef EXTRAS
+export EXTRAS
+	SRC_FILES := $(shell find $(SRC_DIR)/ -name "*.c")
+else
+	SRC_FILES := $(shell find $(SRC_DIR)/ $(NOTPATH) -name "*.c")
+endif
 
 OBJS_DIR = $(BUILDDIR)/objects
 OBJS := $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJS_DIR)/%.o)
@@ -37,6 +43,11 @@ CFLAGS = -MMD -MP -flto -O2 -std=gnu11 -fsanitize=address
 TEST_LIB := $(DESTDIR)/lib/libstd.la
 TEST_LIB_FONTCONFIG := $(DESTDIR)/lib/extra/libstd-fontconfig.la
 
+TEST_LIBS := $(TEST_LIB)
+ifdef EXTRAS
+	TEST_LIBS += $(TEST_LIB_FONTCONFIG)
+endif
+
 ifeq ($(TYPE), debug)
 	CFLAGS += -DDEBUG -ggdb -Wall -Wextra -Wswitch-enum -Wswitch-default
 endif
@@ -46,9 +57,11 @@ PKGCONFIGS_LIBS :=
 
 TEST_FILES := std-str std-lib std-file
 
-LOCAL := F
+LOCAL := T
+ifdef EXTRAS
 ifeq ($(LOCAL),T)
 	TEST_FILES += extra/fontconfig/std-fontconfig
+endif
 endif
 
 ifneq ($(PKGCONFIGS_CFLAGS),)
@@ -65,33 +78,31 @@ CC = gcc
 LIBTOOL := libtool
 LIBTOOLFLAGS := --silent
 
-
 BIN_TEST_FILES := $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
-BIN_NAME := main
 
 .DEFAULT_GOAL := check
 check: build
 	$(foreach file, $(TEST_FILES), ./$(BUILDDIR)/bin/$(file);)
 
-%.la:
-	$(info [INFO] Bootstraping library [$(*:$(dir $(CURDIR))%=%)])
+LIBS: $(TEST_LIBS)
+	$(info [INFO] Bootstraping library [$(TEST_LIB:$(dir $(CURDIR))%.la=%)])
 	@$(MAKE) -C ..
 
 build: build_info dirs makefile $(BIN_TEST_FILES)
 
-$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o $(TEST_LIB)
+$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o LIBS
 	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
-		$^ $(TEST_LIB) $(LIBS)
+		$< $(TEST_LIB) $(LIBS)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/$*
 
-$(BUILDDIR)/bin/extra/fontconfig/%: $(OBJS_DIR)/extra/fontconfig/%.o $(TEST_LIB)
+$(BUILDDIR)/bin/extra/fontconfig/%: $(OBJS_DIR)/extra/fontconfig/%.o LIBS
 	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
 	$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
-		$^ $(TEST_LIB) $(TEST_LIB_FONTCONFIG) $(LIBS) $(shell pkg-config --libs fontconfig)
+		$< $(TEST_LIB) $(TEST_LIB_FONTCONFIG) $(LIBS) $(shell pkg-config --libs fontconfig)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/extra/fontconfig/$*
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c $(TEST_LIB) makefile
+$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c LIBS makefile
 	$(info [CC] $<)
 	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
@@ -106,7 +117,8 @@ $(BUILDDIR)/%/:
 	$(info [INFO] Creating directory [$@])
 	@mkdir -p $@
 
-.PHONY: clean ccls debug_info build_info install_info
+.PHONY: clean ccls build_info
+
 build_info:
 ifeq ($(TYPE), debug)
 	$(info [INFO] Compiling In Debug Mode [Test Suite])
