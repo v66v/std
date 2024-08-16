@@ -13,8 +13,8 @@ extern "C"
 #define STR_IMPL_(...) #__VA_ARGS__
 #define STR(...) STR_IMPL_ (__VA_ARGS__)
 
-#define ep(...) fprintf (stderr, __VA_ARGS__)
-#define op(...) printf (__VA_ARGS__)
+#define pe(...) fprintf (stderr, __VA_ARGS__)
+#define po(...) printf (__VA_ARGS__)
 
 #define MAX(a, b)                                                             \
   ({                                                                          \
