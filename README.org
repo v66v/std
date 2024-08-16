@@ -1,3 +1,23 @@
 #+title: std
 
 A simple WIP c standard library extension library.
+
+* Building (Debug)
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 TYPE=debug
+#+end_src
+
+Note: omit `TYPE=debug' to build for release
+
+* Installing
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 install DESTDIR=/somewhere/on/system
+#+end_src
+
+Warning: Do NOT run `make build' before the above command. `make install'
+         autotriggers `make build' with the appropriate variables set (aka DESTDIR)
+
+* Check
+#+begin_src bash
+  guix shell --pure -Df guix.scm -- make -j4 TYPE=debug check
+#+end_src
