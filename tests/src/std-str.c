@@ -36,6 +36,14 @@ str_copym_test ()
   assert_string_equal (new_str, str);
 }
 
+static void
+palindromep_test ()
+{
+  char str_t[] = "racecar", str_f[] = "raeCar";
+  assert_int_equal (palindromep (str_t), 0);
+  assert_int_equal (palindromep (str_f), 1);
+}
+
 int
 main (void)
 {
@@ -43,6 +51,7 @@ main (void)
     cmocka_unit_test (touppers_test),
     cmocka_unit_test (tolowers_test),
     cmocka_unit_test (str_copym_test),
+	cmocka_unit_test (palindromep_test),
   };
 
   TEST_START

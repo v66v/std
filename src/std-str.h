@@ -9,7 +9,10 @@ extern "C"
 
   void tolowers (char *s);
   void touppers (char *s);
+
   int str_copym (char **dest, char *orig);
+
+  int palindromep (char *s);
 
 #if defined(__cplusplus)
 }
