@@ -42,3 +42,7 @@ Currently the extras require: pkg-config and fontconfig
 #+begin_src bash
   guix shell --pure -Df guix.scm -- make -j4 check TYPE=debug EXTRAS=1
 #+end_src
+
+* License
+
+Released under the LGPL-3.0-or-later, unless otherwise specified by license files in subfolders.
