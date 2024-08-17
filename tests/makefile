@@ -84,25 +84,23 @@ BIN_TEST_FILES := $(addprefix $(BUILDDIR)/bin/,$(TEST_FILES))
 check: build
 	$(foreach file, $(TEST_FILES), ./$(BUILDDIR)/bin/$(file);)
 
-LIBS: $(TEST_LIBS)
-	$(info [INFO] Bootstraping library [$(TEST_LIB:$(dir $(CURDIR))%.la=%)])
-	@$(MAKE) -C ..
+build: build_info dirs makefile
+	$(MAKE) -C ..
+	$(MAKE) $(BIN_TEST_FILES)
 
-build: build_info dirs makefile $(BIN_TEST_FILES)
-
-$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o LIBS
+$(BUILDDIR)/bin/%: $(OBJS_DIR)/%.o
 	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
 	@$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
 		$< $(TEST_LIB) $(LIBS)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/$*
 
-$(BUILDDIR)/bin/extra/fontconfig/%: $(OBJS_DIR)/extra/fontconfig/%.o LIBS
+$(BUILDDIR)/bin/extra/fontconfig/%: $(OBJS_DIR)/extra/fontconfig/%.o
 	$(info [CC] Linking object files [$(BUILDDIR)/bin/$*])
 	$(LIBTOOL) $(LIBTOOLFLAGS) --tag=CC --mode=link $(CC) -o $(OBJS_DIR)/$* \
 		$< $(TEST_LIB) $(TEST_LIB_FONTCONFIG) $(LIBS) $(shell pkg-config --libs fontconfig)
 	@mv $(OBJS_DIR)/$* $(BUILDDIR)/bin/extra/fontconfig/$*
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c LIBS makefile
+$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c makefile
 	$(info [CC] $<)
 	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
@@ -117,7 +115,7 @@ $(BUILDDIR)/%/:
 	$(info [INFO] Creating directory [$@])
 	@mkdir -p $@
 
-.PHONY: clean ccls build_info
+.PHONY: clean ccls build_info LIBS
 
 build_info:
 ifeq ($(TYPE), debug)

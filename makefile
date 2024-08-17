@@ -96,7 +96,7 @@ check:
 	@$(MAKE) -sC tests
 
 hdrs: $(HDRS)
-$(HDR_DIR)/%.h:
+$(HDR_DIR)/%.h: $(SRC_DIR)/%.h
 	@cp $(SRC_DIR)/$*.h $(HDR_DIR)/$*.h
 
 $(BUILDDIR)/lib/libstd.la: $(OBJS)
